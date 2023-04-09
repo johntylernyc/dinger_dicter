@@ -1,7 +1,3 @@
-# Dependencies 
-list of all the libraries required to run files in `dinger_dicter`:
-- pybaseball
-- pandas
-- google-cloud-bigquery
+A tool for predicting which MLB players will hit a home run on a given date. 
 
-Developed in Python 3.7.9
+Current State: In Development
