@@ -39,6 +39,7 @@ def load_batter_data_to_gbq(daily_statcast_data_csv):
             schema=[
                 bigquery.SchemaField("game_date", "DATE", description="The date of the game."),
                 bigquery.SchemaField("player_name", "STRING", description="The name of the player."),
+                #TODO: Add Player ID
                 bigquery.SchemaField("launch_speed", "FLOAT64", description="The speed of the ball when it leaves the bat."),
                 bigquery.SchemaField("launch_angle", "FLOAT64", description="The angle of the ball when it leaves the bat."),
                 bigquery.SchemaField("pitch_type", "STRING", description="The type of pitch thrown."),
@@ -61,33 +62,32 @@ def load_batter_data_to_gbq(daily_statcast_data_csv):
     except:
         # print a message
         print('Table does not exist.')
+        # create a job config object
+        job_config = bigquery.LoadJobConfig(
+            # set the source format to CSV
+            source_format=bigquery.SourceFormat.CSV,
+            # set the write disposition to WRITE_TRUNCATE
+            write_disposition='WRITE_TRUNCATE',
+            # set the schema add column definitions
+            schema=[
+                bigquery.SchemaField("game_date", "DATE", description="The date of the game."),
+                bigquery.SchemaField("player_name", "STRING", description="The name of the player."),
+                bigquery.SchemaField("launch_speed", "FLOAT64", description="The speed of the ball when it leaves the bat."),
+                bigquery.SchemaField("launch_angle", "FLOAT64", description="The angle of the ball when it leaves the bat."),
+                bigquery.SchemaField("pitch_type", "STRING", description="The type of pitch thrown."),
+                bigquery.SchemaField("release_speed", "FLOAT64", description="The speed of the pitch when it leaves the pitcher's hand."),
+                bigquery.SchemaField("p_throws", "STRING", description="The hand of the pitcher.")
+            ]
+        )
 
-    # create a job config object
-    job_config = bigquery.LoadJobConfig(
-        # set the source format to CSV
-        source_format=bigquery.SourceFormat.CSV,
-        # set the write disposition to WRITE_TRUNCATE
-        write_disposition='WRITE_TRUNCATE',
-        # set the schema add column definitions
-        schema=[
-            bigquery.SchemaField("game_date", "DATE", description="The date of the game."),
-            bigquery.SchemaField("player_name", "STRING", description="The name of the player."),
-            bigquery.SchemaField("launch_speed", "FLOAT64", description="The speed of the ball when it leaves the bat."),
-            bigquery.SchemaField("launch_angle", "FLOAT64", description="The angle of the ball when it leaves the bat."),
-            bigquery.SchemaField("pitch_type", "STRING", description="The type of pitch thrown."),
-            bigquery.SchemaField("release_speed", "FLOAT64", description="The speed of the pitch when it leaves the pitcher's hand."),
-            bigquery.SchemaField("p_throws", "STRING", description="The hand of the pitcher.")
-        ]
-    )
+        # define the path to the csv file
+        csv_file_path = 'daily_statcast_data.csv'
 
-    # define the path to the csv file
-    csv_file_path = 'daily_statcast_data.csv'
-
-    # open the csv file
-    with open(csv_file_path, 'rb') as source_file:
-        # load the csv file into the table
-        job = client.load_table_from_file(source_file, table_ref, job_config=job_config)
-        # wait for the job to complete
-        job.result()
-        # print a success message
-        print('Table successfully created.')
+        # open the csv file
+        with open(csv_file_path, 'rb') as source_file:
+            # load the csv file into the table
+            job = client.load_table_from_file(source_file, table_ref, job_config=job_config)
+            # wait for the job to complete
+            job.result()
+            # print a success message
+            print('Table successfully created.')

@@ -23,6 +23,16 @@ def get_most_recent_date():
     # define the name of the table
     table_ref = dataset_ref.table(table_name)
 
+    # check to see whether the table exists
+    try:
+        # try to load the table
+        client.get_table(table_ref)
+    except:
+        # if the table doesn't exist print a message
+        print('Table does not exist.')
+        # return None
+        return '2021-01-01'
+
     # write a query that gets the most recent date that we've loaded statcast data, using the project_id, dataset_name, and table_name variables
     query = f"""
     SELECT
