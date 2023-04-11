@@ -7,6 +7,8 @@
 from pybaseball import batting_stats
 from pybaseball import playerid_reverse_lookup
 
+#TODO: We might want players who averaged X or more plate appareances over the years given as opposed to adding any player that hit that minimum in one year. 
+
 def get_qualified_players(years, qual):
     player_ids_list = []
     for year in years: 
@@ -21,7 +23,7 @@ def get_qualified_players(years, qual):
         # remove duplicates from player_ids_list
         player_ids_list = list(dict.fromkeys(player_ids_list))
     return player_ids_list
-
+    
 if __name__ == "__main__":
     arg1_value = [2022, 2021]
     arg2_value = 300
@@ -66,6 +68,4 @@ each time they had 300 or more plate appearances in a given year.
 - Yes, we can remove the duplicates. But this still doesn't neccessarily give us the desired list.
 --- I've temporarily removed duplicates for the purposes of just confirming that is the underlying issue. (4/9/23)
 --- It appears this has worked! Should do some additional testing to confirm. (4/10/23)
-
-#TODO: What we want are players who averaged X  or more plate appareances over the years given. 
 '''
