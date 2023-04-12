@@ -1,6 +1,6 @@
 from datetime import date
 from datetime import timedelta
-from gbq_lookup_most_recent_data import get_most_recent_date
+from helper_functions.gbq_lookup_most_recent_data import get_most_recent_date
 
 # define a list of years that will be used to get the list of qualified players
 years = [2021,2022]
