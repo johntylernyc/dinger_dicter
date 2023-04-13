@@ -1,14 +1,8 @@
-# Purpose: Load the daily Statcast data into Google BigQuery    
-# File Name: gbq_load_batter_statcast_data.py
-# File Path: helper_functions/gbq_load_batter_statcast_data.py
-# Author: John Tyler
-# Created: 2023-4-08
-
 from google.cloud import bigquery
 
-def load_batter_data_to_gbq(daily_statcast_data_csv, dataset_name, statcast_batter_table_name, json_key_path):
+def load_batter_data_to_gbq(daily_statcast_data_csv, dataset_name, statcast_batter_table_name, json_key_path, project_id):
     # create a client object using the `python-sandbox-31204-1b0c0c5b5f8e.json` service account key in service_account_keys folder
-    client = bigquery.Client.from_service_account_json(json_key_path)
+    client = bigquery.Client(project=project_id).from_service_account_json(json_key_path)
     # define the name of the dataset
     dataset_ref = client.dataset(dataset_name)
     # define the name of the table
@@ -83,18 +77,17 @@ def load_batter_data_to_gbq(daily_statcast_data_csv, dataset_name, statcast_batt
             # print a message
             print('Loaded {} rows into {}:{}.'.format(job.output_rows, dataset_name, statcast_batter_table_name))
 
-
-# test the function
-if __name__ == '__main__':
-    # define the path to the csv file
-    daily_statcast_data_csv = '/Users/johntyler/Documents/GitHub/dinger_dicter/daily_statcast_data.csv'
-    # define the project id
-    project_id = 'python-sandbox-381204'
-    # define the dataset name
-    dataset_name = 'dinger_dicter'
-    # define the table name
-    statcast_batter_table_name = 'homerun_batter_statcast_data'
-    # define the path to the service account key
-    json_key_path = '/Users/johntyler/Documents/GitHub/dinger_dicter/service_account_keys/python-sandbox-381204-18d99cdada13.json'
-    # call the function
-    load_batter_data_to_gbq(daily_statcast_data_csv, dataset_name, statcast_batter_table_name, json_key_path)
+# # test the function
+# if __name__ == '__main__':
+#     # define the path to the csv file
+#     daily_statcast_data_csv = '/Users/johntyler/Documents/GitHub/dinger_dicter/daily_statcast_data.csv'
+#     # define the project id
+#     project_id = 'python-sandbox-381204'
+#     # define the dataset name
+#     dataset_name = 'dinger_dicter'
+#     # define the table name
+#     statcast_batter_table_name = 'homerun_batter_statcast_data'
+#     # define the path to the service account key
+#     json_key_path = '/Users/johntyler/Documents/GitHub/dinger_dicter/service_account_keys/python-sandbox-381204-18d99cdada13.json'
+#     # call the function
+#     load_batter_data_to_gbq(daily_statcast_data_csv, dataset_name, statcast_batter_table_name, json_key_path)

@@ -1,10 +1,3 @@
-# Purpose: get the most recent date that we've loaded statcast data to BigQuery
-# File Name: gbq_lookup_most_recent_data.py
-# File Path: helper_functions/gbq_lookup_most_recent_data.py
-# Author: John Tyler
-# Created: 2023-04-08
-
-# import the bigquery library
 from google.cloud import bigquery
 
 def get_most_recent_date(project_id, dataset_name, statcast_batter_table_name, json_key_path):
@@ -19,9 +12,11 @@ def get_most_recent_date(project_id, dataset_name, statcast_batter_table_name, j
     try:
         # try to load the table
         client.get_table(table_ref)
+        # if the table exists print a message that shows the full table name and that it exists
+        print(f'Table {project_id}.{dataset_name}.{statcast_batter_table_name} exists.')
     except:
         # if the table doesn't exist print a message
-        print('Table does not exist.')
+        print(f'Table {project_id}.{dataset_name}.{statcast_batter_table_name} does not exist. Backfilling data to 2021-01-01.')
         # return the first date we're willing to backload the table to as a string.
         return '2021-01-01'
 
@@ -44,14 +39,4 @@ def get_most_recent_date(project_id, dataset_name, statcast_batter_table_name, j
         most_recent_date = row.most_recent_date
 
     # return the most recent date that we've loaded statcast data as a string
-    return most_recent_date.strftime('%Y-%m-%d')
-
-if __name__ == '__main__':
-    arg1 = 'python-sandbox-381204'
-    arg2 = 'dinger_dicter'
-    arg3 = 'daily_statcast_data'
-    arg4 = '/Users/johntyler/Documents/GitHub/dinger_dicter/service_account_keys/python-sandbox-381204-18d99cdada13.json'
-    # get the most recent date that we've loaded statcast data
-    most_recent_date = get_most_recent_date(arg1, arg2, arg3, arg4)
-    # print the most recent date that we've loaded statcast data
-    print(most_recent_date)
+    return most_recent_date.strftime('%Y-%m-%d') 

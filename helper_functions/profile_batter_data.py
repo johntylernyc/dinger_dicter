@@ -1,27 +1,12 @@
-# File Name: profile_hitters.py
-# File Path: helper_functions/profile_hitters.py
-# Author: John Tyler
-# Created: 2023-04-10
-
 from google.cloud import bigquery
 from google.api_core.exceptions import NotFound
 import pandas as pd
 import datetime
-from config import dataset_name, statcast_batter_table_name, json_key_path, project_id
-import os 
+from .config_bigquery import dataset_name, statcast_batter_table_name, json_key_path, project_id
 
-# set the environment variable for the GCP project 
-os.environ['GOOGLE_CLOUD_PROJECT'] = project_id
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = json_key_path
-
-'''
-Write a function that gets all available data from BigQuery using the config.py file variables. 
-Store the data in a pandas dataframe.
-'''
-
-def get_all_data():
+def get_all_batter_data():
     # create a client object using the `python-sandbox-31204-1b0c0c5b5f8e.json` service account key in service_account_keys folder. 
-    client = bigquery.Client.from_service_account_json(json_key_path)
+    client = bigquery.Client(project=project_id).from_service_account_json(json_key_path)
     # define the name of the dataset
     dataset_ref = client.dataset(dataset_name)
     # define the name of the table
@@ -37,18 +22,7 @@ def get_all_data():
     # return the pandas dataframe
     return df
 
-''' 
-Write a function to preprocess the data in the dataframe, specifically looking for the following: 
-1. Remove all rows where player_name is null. 
-2. Remove all rows where the player_id is null.
-3. If launch_speed is null, set it to the median for that player_id. 
-4. If launch_angle is null, set it to the median for that player_id.
-5. If the pitch_type is null, drop the row. 
-6. If the release_speed is null, set it to the median for that pitch_type for the given player_id.
-7. If the p_throws is null, drop the row.
-'''
-
-def preprocess_data(df):
+def preprocess_batter_data(df):
     # remove all rows where game_date is null
     df = df[df['game_date'].notna()]
     # remove all rows where player_name is null
@@ -68,22 +42,7 @@ def preprocess_data(df):
     # return the dataframe
     return df
 
-'''
-Write a function to add features to the home runs hit for each of the hitters in the dataframe. For each row, calculate the following:
-1. Bin the launch_speed into 3 bins: weak, normal, hard. These should use the 33rd, 50th, and 67th percentiles across the entire dataset, respectively.
-2. Bin the launch_angle into 3 bins: low, medium, high. These should use the 33rd, 50th, and 67th percentiles across the entire dataset, respectively.
-3. Calculate the difference between the launch_speed and the release_speed.
-4. Calculate the difference between the launch_angle and the release_speed.
-5. Calculate the game month as a number from 1-12 using the game_date column.
-6. Calculate the number of days since the player's last home run, using the game_date column and the player_id column.
-7. Calculate the cumulative number of home runs across all games for the player up to that point, using the player_id column.
-8. Calculate the moving average for the launch_speed for the player up to that point for the last 20 home runs, using the game_date and player_id columns.
-9. Calculate the moving average for the launch_angle for the player up to that point for the last 20 home runs, using the game_date player_id columns.
-10. Bin the release_speed into 3 bins: slow, normal, fast. These should use the 33rd, 50th, and 67th percentiles across the entire dataset, respectively.
-11. Create a new feature that combines the "pitch_type" and "p_throws" columns. For example, if the pitch_type is "FF" and the p_throws is "R", the new feature should be "FF_R". If the pitch_type is "FF" and the p_throws is "L", the new feature should be "FF_L".
-'''
-
-def add_features(df):
+def add_batter_features(df):
     df['launch_speed_bin'] = pd.qcut(df['launch_speed'], q=3, labels=['weak', 'normal', 'hard'])
     df['launch_angle_bin'] = pd.qcut(df['launch_angle'], q=3, labels=['low', 'medium', 'high'])
     df['speed_diff'] = df['launch_speed'] - df['release_speed']
@@ -112,15 +71,14 @@ def add_features(df):
 
     return df
 
-# write a test function to test the functions you wrote above
-def create_new_df_with_features_and_tests():
+def create_new_batter_df_with_features_and_tests():
     def data_quality_check(df, column_name):
         if df[column_name].isnull().sum() == 0:
             print(f"{column_name} data quality check complete")
         else:
             print(f"{column_name} data quality check failed")
 
-    df = add_features(preprocess_data(get_all_data()))
+    df = add_batter_features(preprocess_batter_data(get_all_batter_data()))
 
     columns_to_check = [
         "player_name", "player_id", "game_date", "pitch_type", "p_throws",
@@ -137,22 +95,9 @@ def create_new_df_with_features_and_tests():
     print('All tests passed!')
     return df
 
-'''
-Write a function that will do all of the following: 
-1. Check to see what data is already in the table in BigQuery.
-2. If there is no data in the table, load the data into BigQuery.
-3. If there is data in the table, only load the data that is not already in the table.
-With the conditions below: 
-1. The table should be named "homerun_statcast_batter_data_with_features" 
-2. It should be in the 'dataset_name' given above.
-3. Document the schema in BigQuery with field descriptions. 
-4. Include a column for the date the data was added to the table. 
-The function should take the dataframe as an argument and return a message with the job id and the number of rows loaded into BigQuery.
-'''
-
-def load_profile_data(df):
+def load_batter_profile_data(df):
     # create a BigQuery client
-    client = bigquery.Client()
+    client = bigquery.Client(project=project_id).from_service_account_json(json_key_path)
     # create a BigQuery dataset reference
     dataset_ref = client.dataset(dataset_name)
     # create a BigQuery table reference
@@ -223,41 +168,7 @@ def load_profile_data(df):
         print('Loaded {} rows into {}:{}.'.format(job_result.output_rows, dataset_name, statcast_batter_table_name + '_with_features'))
         return job_result.job_id
 
-df = create_new_df_with_features_and_tests()
-# load the data into BigQuery
-job_id = load_profile_data(df)
-# check the results
-print('Job ID: {}'.format(job_id))
-
-'''
-Using the df we created above, we want to create a new dataframe df2 that summarizes each player's data and the features we just created. 
-There should only be one row for each player in the dataframe.
-
-We want to create a new dataframe that has the following information for each player, considering all of the available data for that player:
-- player_id
-- player_name
-- number_of_home_runs
-- average_launch_speed
-- standard_deviation_launch_speed
-- average_launch_angle
-- standard_deviation_launch_angle
-- average_speed_diff
-- average_angle_diff
-- average days since last hr
-- standard deviation of days since last hr
-- average release speed
-- median release speed
-- proportion of release speed thrown slow, normal, fast (e.g., proportion_of_release_speed_slow)
-- proportion of pitch thrown R or L (e.g., proportion_of_pitch_type_R)
-- proportion of each pitch type thrown (e.g., proportion_of_pitch_type_FF)
-- proportion of each pitch type thrown for each hand (e.g., proportion_of_pitch_type_FF_R)
-- proportion_of_game_month (e..g, proportion_of_game_month_4) for months 4,5,6,7,8,9,10
-
-Return the new dataframe
-'''
-
-# FIX ME: Does not work, all data is NaN or 0.0
-def create_summary_dataframe(df):
+def create_batter_summary_dataframe(df):
     # Group by player_id and get summary statistics
     player_summary = df.groupby('player_id').agg({
         'player_name': 'first',
@@ -293,10 +204,9 @@ def create_summary_dataframe(df):
 
     return summary_df.reset_index()
 
-# write a new function that will load the summary_df into BigQuery
-def load_summary_data(df):
+def load_batter_summary_data(df):
     # create a BigQuery client
-    client = bigquery.Client()
+    client = bigquery.Client(project=project_id).from_service_account_json(json_key_path)
     # create a dataset reference
     dataset_ref = client.dataset(dataset_name)
     # create a table reference
@@ -321,10 +231,10 @@ def load_summary_data(df):
         
         return schema
 
-    bq_schema = generate_bigquery_schema(summary_df)
+    bq_schema = generate_bigquery_schema(df)
 
     # Verify if the DataFrame and schema have the same columns
-    df_columns = set(summary_df.columns)
+    df_columns = set(df.columns)
     schema_columns = {field.name for field in bq_schema}
 
     if df_columns != schema_columns:
@@ -379,7 +289,7 @@ def load_summary_data(df):
             job_config.source_format = bigquery.SourceFormat.CSV
             job_config.skip_leading_rows = 1
             job_config.autodetect = True
-            job_config.schema = schema
+            job_config.schema = bq_schema
             job = client.load_table_from_dataframe(df, table_ref, job_config=job_config)
             job_result = job.result()
             print('Loaded {} rows into {}:{}.'.format(job_result.output_rows, dataset_name, statcast_batter_table_name + '_summary'))
@@ -387,9 +297,3 @@ def load_summary_data(df):
         else:
             print('No new data to load into {}:{}.'.format(dataset_name, statcast_batter_table_name + '_summary'))
             return None, None
-
-# Assuming df is the input DataFrame
-summary_df = create_summary_dataframe(df)
-job_id, output_rows = load_summary_data(summary_df)
-print('Job ID: {}'.format(job_id))
-print('Output Rows: {}'.format(output_rows))

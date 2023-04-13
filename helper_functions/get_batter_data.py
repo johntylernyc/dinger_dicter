@@ -1,17 +1,8 @@
-# Purpose: Get the daily statcast data for each player in the `player_ids` list using the `statcast_batter` function from pybaseball.
-# File Name: get_batter_data.py
-# File Path: helper_functions/get_batter_data.py
-# Author: John Tyler
-# Created: 2023-04-08
-
 from pybaseball import statcast_batter
 import pandas as pd
+from .config_application_dates import date_to_fetch, yesterday
 
-# create variables that will be passed in as empty strings
-date_to_fetch = ''
-today = ''
-
-def get_daily_statcast_data(player_ids, start_date=date_to_fetch, end_date=today):
+def get_daily_statcast_data(player_ids, start_date=date_to_fetch, end_date=yesterday):
     # create an empty list to store the daily statcast data for each player
     daily_statcast_data = []
     # loop through each player in the `player_ids` list
@@ -30,12 +21,3 @@ def get_daily_statcast_data(player_ids, start_date=date_to_fetch, end_date=today
     daily_statcast_data = daily_statcast_data[['player_id', 'game_date', 'player_name','launch_speed', 'launch_angle', 'pitch_type', 'release_speed', 'p_throws']]
     # return the dataframe
     return daily_statcast_data
-
-#testing the function with placeholder variables
-if __name__ == '__main__':
-    player_ids = [592450, 623993]
-    date_to_fetch = '2023-04-09'
-    today = '2023-04-09'
-    result = get_daily_statcast_data(player_ids, date_to_fetch, today)
-    # result.to_csv('test_data_fetch.csv', index=False, header=True)
-    print(result)

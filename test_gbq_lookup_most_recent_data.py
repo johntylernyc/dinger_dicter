@@ -1,0 +1,5 @@
+from helper_functions.gbq_lookup_most_recent_data import get_most_recent_date
+from helper_functions.config_bigquery import project_id, dataset_name, statcast_batter_table_name, json_key_path
+
+most_recent_date = get_most_recent_date(project_id, dataset_name, statcast_batter_table_name, json_key_path)
+print(most_recent_date)
