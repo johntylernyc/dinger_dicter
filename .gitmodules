@@ -1,0 +1,3 @@
+[submodule "helper_functions/baseball-probable-pitchers"]
+	path = helper_functions/baseball-probable-pitchers
+	url = https://github.com/edwarddistel/baseball-probable-pitchers.git

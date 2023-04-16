@@ -7,11 +7,14 @@ from helper_functions.get_qualified_batters import get_qualified_players
 from helper_functions.get_batter_data import get_daily_statcast_data
 from helper_functions.gbq_load_batter_statcast_data import load_batter_data_to_gbq
 from helper_functions.profile_batter_data import create_new_batter_df_with_features_and_tests, load_batter_profile_data, create_batter_summary_dataframe, load_batter_summary_data
+from helper_functions.get_probable_starters import get_probable_starters
+from helper_functions.gbq_load_probable_starters import load_probable_starters
 
 # import configuration variables from the configuration files
 from helper_functions.config_bigquery import project_id, dataset_name, statcast_batter_table_name, json_key_path
 from helper_functions.config_application_dates import most_recent_date, date_to_fetch, yesterday, today_datetime, two_days_ago
 from helper_functions.config_application_parameters import years, hitter_qual
+
 
 # if today_datetime is before 12:00 PM, check to see if most_recent_date converted to a date object is == to two_days_ago converted to a date object
 if today_datetime.hour < 12:
@@ -70,16 +73,22 @@ else:
     print('The hour is neither before nor after noon. Something went terribly wrong updating statcast data. Please check the code.')
     exit()
 
-# profile the hitters and load the results to BigQuery
+# profile hitter's home run pitches and load the results to BigQuery
 df = create_new_batter_df_with_features_and_tests()
 job_id = load_batter_profile_data(df)
 print('Job ID: {}'.format(job_id))
 print('The hitter profile data has been loaded to BigQuery.')
-# create the summary dataframe
+# create the hitter summary dataframe and load the results to BigQuery
 summary_df = create_batter_summary_dataframe(df)
 job_id, output_rows = load_batter_summary_data(summary_df)
 print('Job ID: {}'.format(job_id))
 print('Output Rows: {}'.format(output_rows))
 print('The hitter profile summary data has been loaded to BigQuery.')
+# get the probable starters for today's games and load the results to BigQuery
+probable_starters = get_probable_starters()
+job_id, output_rows = load_probable_starters(probable_starters)
+print('Job ID: {}'.format(job_id))
+print('Output Rows: {}'.format(output_rows))
+print('The probable starters data has been loaded to BigQuery.')
 
 exit()
