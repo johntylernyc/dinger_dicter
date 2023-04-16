@@ -73,21 +73,19 @@ else:
     print('The hour is neither before nor after noon. Something went terribly wrong updating statcast data. Please check the code.')
     exit()
 
-# profile the hitters and load the results to BigQuery
+# profile hitter's home run pitches and load the results to BigQuery
 df = create_new_batter_df_with_features_and_tests()
 job_id = load_batter_profile_data(df)
 print('Job ID: {}'.format(job_id))
 print('The hitter profile data has been loaded to BigQuery.')
-# create the summary dataframe
+# create the hitter summary dataframe and load the results to BigQuery
 summary_df = create_batter_summary_dataframe(df)
 job_id, output_rows = load_batter_summary_data(summary_df)
 print('Job ID: {}'.format(job_id))
 print('Output Rows: {}'.format(output_rows))
 print('The hitter profile summary data has been loaded to BigQuery.')
-
-# get the probable starters for today's games
+# get the probable starters for today's games and load the results to BigQuery
 probable_starters = get_probable_starters()
-# load the probable starters to BigQuery
 job_id, output_rows = load_probable_starters(probable_starters)
 print('Job ID: {}'.format(job_id))
 print('Output Rows: {}'.format(output_rows))

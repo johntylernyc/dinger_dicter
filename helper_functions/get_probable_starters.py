@@ -1,12 +1,12 @@
 import os
 import subprocess
 import json
-from pybaseball import playerid_lookup, playerid_reverse_lookup
+from pybaseball import playerid_lookup
 import pandas as pd
 
 def run_npm_start():
     try:
-        project_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'baseball-probable-pitchers')
+        project_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'baseball-probable-pitchers')
         process = subprocess.Popen(["npm", "start"], cwd=project_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
         print(f"Success: {stdout.decode('utf-8')}") if process.returncode == 0 else print(f"Error: {stderr.decode('utf-8')}")
@@ -15,13 +15,14 @@ def run_npm_start():
 
 def get_probable_starters():
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    project_path = os.path.join(script_dir, '..', 'baseball-probable-pitchers')
+    project_path = os.path.join(script_dir, 'baseball-probable-pitchers')
     probable_pitchers_file = os.path.join(project_path, 'probable-pitchers.json')
 
     with open(probable_pitchers_file, 'r') as f:
         json_data = json.load(f)
         probable_pitchers_data = json_data['matchups']
 
+    os.remove(probable_pitchers_file)
     probable_pitchers = pd.DataFrame(probable_pitchers_data)
     away_player_mlbam = []
     home_player_mlbam = []

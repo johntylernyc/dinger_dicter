@@ -7,7 +7,6 @@ def load_batter_data_to_gbq(daily_statcast_data_csv, dataset_name, statcast_batt
     dataset_ref = client.dataset(dataset_name)
     # define the name of the table
     table_ref = dataset_ref.table(statcast_batter_table_name)
-
     # check to see if the table already exists
     try:
         # try to load the table
