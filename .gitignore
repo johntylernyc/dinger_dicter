@@ -133,3 +133,5 @@ dmypy.json
 service_account_keys/
 daily_statcast_data.csv
 .vscode/settings.json
+
+!dinger_dicter/baseball-probable-pitchers/
