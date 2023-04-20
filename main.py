@@ -17,7 +17,7 @@ from helper_functions.config_application_parameters import years, hitter_qual
 
 
 # if today_datetime is before 12:00 PM, check to see if most_recent_date converted to a date object is == to two_days_ago converted to a date object
-if today_datetime.hour < 12:
+if today_datetime.hour < 9:
     if datetime.strptime(most_recent_date, '%Y-%m-%d').date() == datetime.strptime(two_days_ago, '%Y-%m-%d').date():
         print('The most recent date in the database is: ' + most_recent_date)
         print('The most recent available data is: ' + two_days_ago)
@@ -43,7 +43,7 @@ if today_datetime.hour < 12:
     else: 
         print('The hour is before noon but something went wrong updating statcast data. Please check the code.')
         exit()
-elif today_datetime.hour >= 12:
+elif today_datetime.hour >= 9:
     if datetime.strptime(most_recent_date, '%Y-%m-%d').date() == datetime.strptime(yesterday, '%Y-%m-%d').date():
         print('The most recent date in the database is: ' + most_recent_date)
         print('The most recent available data is: ' + yesterday)

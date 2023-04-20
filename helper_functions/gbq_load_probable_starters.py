@@ -16,10 +16,15 @@ def load_probable_starters(df):
         current_year = datetime.datetime.now().year
         return time_obj.replace(year=current_year)
 
-    # Assuming you have loaded the JSON data into a DataFrame called df
+    # Apply remove_timezone before converting to datetime
     df['time'] = df['time'].apply(remove_timezone)
-    df['time'] = pd.to_datetime(df['time'], format='%a, %b %d • %I:%M %p')
+
+    # Convert the 'time' column to datetime
+    df['time'] = pd.to_datetime(df['time'], format='%a, %b %d • %I:%M %p', errors='coerce')
+
+    # Apply set_current_year
     df['time'] = df['time'].apply(set_current_year)
+
     # set the load date time column to the current date and time
     df['load_date_time'] = datetime.datetime.now()
 
@@ -42,5 +47,5 @@ def load_probable_starters(df):
         return load_job.job_id, len(df)
 
 if __name__ == "__main__":
-    probable_pitchers = pd.read_json('/Users/johntyler/Documents/GitHub/dinger_dicter/baseball-probable-pitchers/probable-pitchers-with-player-ids.json')
+    probable_pitchers = pd.read_json('/Users/johntyler/Documents/GitHub/dinger_dicter/helper_functions/baseball-probable-pitchers/probable-pitchers-with-player-ids.json')
     load_probable_starters(probable_pitchers)

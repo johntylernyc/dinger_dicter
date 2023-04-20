@@ -13,7 +13,9 @@ def run_npm_start():
     except Exception as e:
         print(f"An error occurred: {e}")
 
+#TODO: This function appends new data to the existing table. Update to check whether the data we're appending already exists.
 def get_probable_starters():
+    run_npm_start()
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_path = os.path.join(script_dir, 'baseball-probable-pitchers')
     probable_pitchers_file = os.path.join(project_path, 'probable-pitchers.json')
@@ -28,9 +30,15 @@ def get_probable_starters():
     home_player_mlbam = []
 
     def get_player_mlbam(player_name):
+        # Check if player_name is 'TBD' or does not contain a space
+        if player_name == 'TBD' or ' ' not in player_name:
+            # In this case, you can return None or handle it differently if needed
+            return None
+        # If player_name is not 'TBD' and has a space, split it into first_name and last_name
         first_name, last_name = player_name.split(' ')
         player_mlbam = playerid_lookup(last_name, first_name, fuzzy=True)
-        return str(player_mlbam['key_mlbam'].values[0]) if not player_mlbam.empty else None
+        return int(player_mlbam['key_mlbam'].values[0]) if not player_mlbam.empty else None
+
 
     for index, row in probable_pitchers.iterrows():
         away_player_mlbam.append(get_player_mlbam(row['pitcherAway']))
