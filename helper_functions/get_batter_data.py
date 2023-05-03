@@ -2,7 +2,7 @@ from pybaseball import statcast_batter
 import pandas as pd
 from .config_application_dates import batter_date_to_fetch, yesterday
 
-def get_daily_statcast_data(player_ids, start_date=batter_date_to_fetch, end_date=yesterday):
+def get_daily_batter_statcast_data(player_ids, start_date=batter_date_to_fetch, end_date=yesterday):
     daily_statcast_data = []
     for player in player_ids:
         try:

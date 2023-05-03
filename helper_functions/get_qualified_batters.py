@@ -3,7 +3,7 @@ from pybaseball import playerid_reverse_lookup
 
 #TODO: We might want players who averaged X or more plate appareances over the years given as opposed to adding any player that hit that minimum in one year. 
 
-def get_qualified_players(years, qual):
+def get_qualified_batters(years, qual):
     player_ids_list = []
     for year in years: 
         qualified_players = batting_stats(year, qual=qual)
