@@ -3,12 +3,11 @@ from google.cloud import bigquery
 import pandas as pd
 import datetime
 
-def load_probable_starters(df):
-    client = bigquery.Client.from_service_account_json(json_key_path)
+def load_probable_starters(df, table_name, json_key_path, project_id):
+    client = bigquery.Client.from_service_account_json(json_key_path, project=project_id)
     dataset_ref = client.dataset(dataset_name)
-    table_ref = dataset_ref.table(probable_pitcher_table_name)
+    table_ref = dataset_ref.table(table_name)
     
-    # add load date time column and convert time column to datetime
     def remove_timezone(time_str):
         return ' '.join(time_str.split()[:-1])
     
@@ -18,13 +17,10 @@ def load_probable_starters(df):
 
     # Apply remove_timezone before converting to datetime
     df['time'] = df['time'].apply(remove_timezone)
-
     # Convert the 'time' column to datetime
     df['time'] = pd.to_datetime(df['time'], format='%a, %b %d • %I:%M %p', errors='coerce')
-
     # Apply set_current_year
     df['time'] = df['time'].apply(set_current_year)
-
     # set the load date time column to the current date and time
     df['load_date_time'] = datetime.datetime.now()
 
@@ -36,7 +32,6 @@ def load_probable_starters(df):
     ]
     job_config.autodetect = True
 
-    # Load the DataFrame to the table
     load_job = client.load_table_from_dataframe(df, table_ref, job_config=job_config)
     load_job.result()  # Wait for the job to complete
 
@@ -48,4 +43,6 @@ def load_probable_starters(df):
 
 if __name__ == "__main__":
     probable_pitchers = pd.read_json('/Users/johntyler/Documents/GitHub/dinger_dicter/helper_functions/baseball-probable-pitchers/probable-pitchers-with-player-ids.json')
-    load_probable_starters(probable_pitchers)
+    
+    from .config_bigquery import project_id, dataset_name, probable_pitcher_table_name, json_key_path
+    load_probable_starters(probable_pitchers, probable_pitcher_table_name, json_key_path, project_id)

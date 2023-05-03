@@ -1,92 +1,65 @@
+import pandas as pd
 from google.cloud import bigquery
+from datetime import datetime
 
-def load_batter_data_to_gbq(daily_statcast_data_csv, dataset_name, statcast_batter_table_name, json_key_path, project_id):
-    # create a client object using the `python-sandbox-31204-1b0c0c5b5f8e.json` service account key in service_account_keys folder
+def pandas_dtype_to_bigquery_dtype(dtype):
+    dtype_mapping = {
+        'int64': 'INT64',
+        'float64': 'FLOAT64',
+        'bool': 'BOOL',
+        'object': 'STRING',
+        'datetime64': 'TIMESTAMP',
+        # Add more data types if necessary
+    }
+    return dtype_mapping.get(dtype, 'STRING')
+
+def schema_from_dataframe(df):
+    schema = []
+    for column_name, data_type in zip(df.columns, df.dtypes):
+        # Check if the column_name is 'release_spin_rate' and set the type to 'FLOAT64'
+        if column_name == 'release_spin_rate':
+            schema.append(bigquery.SchemaField(column_name, 'FLOAT64'))
+        else:
+            schema.append(bigquery.SchemaField(column_name, pandas_dtype_to_bigquery_dtype(data_type.name)))
+    return schema
+
+def load_data_to_gbq(daily_statcast_data, dataset_name, table_name, json_key_path, project_id):
     client = bigquery.Client(project=project_id).from_service_account_json(json_key_path)
-    # define the name of the dataset
     dataset_ref = client.dataset(dataset_name)
-    # define the name of the table
-    table_ref = dataset_ref.table(statcast_batter_table_name)
-    # check to see if the table already exists
+    table_ref = dataset_ref.table(table_name)
+
+    # Use the DataFrame directly, without reading from a CSV
+    df = daily_statcast_data
+    # Force the 'launch_speed' column to be float
+    df['launch_speed'] = df['launch_speed'].astype(float)
+    df['launch_angle'] = df['launch_angle'].astype(float)
+    df['release_speed'] = df['release_speed'].astype(float)
+    df['release_spin_rate'] = df['release_spin_rate'].astype(float)
+
+    # Add a new column 'load_timestamp' with the current date and time
+    df['load_timestamp'] = datetime.utcnow()
+
+    inferred_schema = schema_from_dataframe(df)
+
     try:
-        # try to load the table
-        client.get_table(table_ref)
-        # if the table already exists print a message
+        table = client.get_table(table_ref)
         print('Table already exists.')
-        # TODO: Currently this just appends the data instead of checking to see if the data already exists. Update to check whether the data already exists.
-        # append the csv data to the existing table
-        job_config = bigquery.LoadJobConfig(
-            # set the source format to CSV
-            source_format=bigquery.SourceFormat.CSV,
-            # set the write disposition to WRITE_APPEND
-            write_disposition='WRITE_APPEND',
-            # set the schema
-            schema=[
-                bigquery.SchemaField("player_id", "INT64", description="The unique ID of the player"),
-                bigquery.SchemaField("game_date", "DATE", description="The date of the game."),
-                bigquery.SchemaField("player_name", "STRING", description="The name of the player."),
-                bigquery.SchemaField("launch_speed", "FLOAT64", description="The speed of the ball when it leaves the bat."),
-                bigquery.SchemaField("launch_angle", "FLOAT64", description="The angle of the ball when it leaves the bat."),
-                bigquery.SchemaField("pitch_type", "STRING", description="The type of pitch thrown."),
-                bigquery.SchemaField("release_speed", "FLOAT64", description="The speed of the pitch when it leaves the pitcher's hand."),
-                bigquery.SchemaField("p_throws", "STRING", description="The hand of the pitcher. (L or R)")
-            ]
-        )
 
-        # open the csv file
-        with open(daily_statcast_data_csv, 'rb') as source_file:
-            # load the csv file into the table
-            job = client.load_table_from_file(source_file, table_ref, job_config=job_config)
-            # wait for the job to complete
-            job.result()
-            # print a message
-            print('Loaded {} rows into {}:{}.'.format(job.output_rows, dataset_name, statcast_batter_table_name))
+        if table.schema != inferred_schema:
+            print('Schema has changed, updating schema.')
+            table.schema = inferred_schema
+            client.update_table(table, ['schema'])
 
-    # if the table does not exist, create it
     except:
-        # print a message
-        print('Table does not exist.')
-        # create a job config object
-        job_config = bigquery.LoadJobConfig(
-            # set the source format to CSV
-            source_format=bigquery.SourceFormat.CSV,
-            # set the write disposition to WRITE_TRUNCATE
-            write_disposition='WRITE_TRUNCATE',
-            # set the schema add column definitions
-            schema=[
-                bigquery.SchemaField("player_id", "INT64", description="The unique ID of the player"),
-                bigquery.SchemaField("game_date", "DATE", description="The date of the game."),
-                bigquery.SchemaField("player_name", "STRING", description="The name of the player."),
-                bigquery.SchemaField("launch_speed", "FLOAT64", description="The speed of the ball when it leaves the bat."),
-                bigquery.SchemaField("launch_angle", "FLOAT64", description="The angle of the ball when it leaves the bat."),
-                bigquery.SchemaField("pitch_type", "STRING", description="The type of pitch thrown."),
-                bigquery.SchemaField("release_speed", "FLOAT64", description="The speed of the pitch when it leaves the pitcher's hand."),
-                bigquery.SchemaField("p_throws", "STRING", description="The hand of the pitcher.")
-            ]
-        )
+        print('Table does not exist. Creating table with schema.')
+        table = bigquery.Table(table_ref, schema=inferred_schema)
+        table = client.create_table(table)
 
-        # open the csv file
-        with open(daily_statcast_data_csv, 'rb') as source_file:
-            # load the csv file into the table
-            job = client.load_table_from_file(source_file, table_ref, job_config=job_config)
-            # wait for the job to complete
-            job.result()
-            # print a success message
-            print('Table successfully created.')
-            # print a message
-            print('Loaded {} rows into {}:{}.'.format(job.output_rows, dataset_name, statcast_batter_table_name))
+    job_config = bigquery.LoadJobConfig(
+        schema=inferred_schema,
+        write_disposition='WRITE_APPEND',
+    )
 
-# # test the function
-# if __name__ == '__main__':
-#     # define the path to the csv file
-#     daily_statcast_data_csv = '/Users/johntyler/Documents/GitHub/dinger_dicter/daily_statcast_data.csv'
-#     # define the project id
-#     project_id = 'python-sandbox-381204'
-#     # define the dataset name
-#     dataset_name = 'dinger_dicter'
-#     # define the table name
-#     statcast_batter_table_name = 'homerun_batter_statcast_data'
-#     # define the path to the service account key
-#     json_key_path = '/Users/johntyler/Documents/GitHub/dinger_dicter/service_account_keys/python-sandbox-381204-18d99cdada13.json'
-#     # call the function
-#     load_batter_data_to_gbq(daily_statcast_data_csv, dataset_name, statcast_batter_table_name, json_key_path)
+    job = client.load_table_from_dataframe(df, table_ref, job_config=job_config)
+    job.result()
+    print('Loaded {} rows into {}:{}.'.format(job.output_rows, dataset_name, table_name))

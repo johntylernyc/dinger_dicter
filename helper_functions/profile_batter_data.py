@@ -39,12 +39,16 @@ def preprocess_batter_data(df):
     df['release_speed'] = df.groupby(['player_id', 'pitch_type'])['release_speed'].apply(lambda x: x.fillna(x.median()))
     # if the p_throws is null, drop the row
     df = df[df['p_throws'].notna()]
+    # if the spin_rate is null, drop the row
+    df = df[df['release_spin_rate'].notna()]
     # return the dataframe
     return df
 
 def add_batter_features(df):
+    print(f"Number of rows after preprocessing: {len(df)}")
     df['launch_speed_bin'] = pd.qcut(df['launch_speed'], q=3, labels=['weak', 'normal', 'hard'])
     df['launch_angle_bin'] = pd.qcut(df['launch_angle'], q=3, labels=['low', 'medium', 'high'])
+    df['release_spin_rate_bin'] = pd.qcut(df['release_spin_rate'], q=3, labels=['low', 'medium', 'high'])
     df['speed_diff'] = df['launch_speed'] - df['release_speed']
     df['angle_diff'] = df['launch_angle'] - df['release_speed']
     df['game_month'] = pd.DatetimeIndex(df['game_date']).month
@@ -63,6 +67,7 @@ def add_batter_features(df):
 
     df = df.drop(columns=['year'])
     df['game_date'] = df['game_date'].dt.date
+
 
     # calculate the moving average for the launch_speed for the player up to that point for the last 20 home runs using the player_id column and for the first 20 home runs, use the average for all home runs for that player.
     # df['moving_avg_speed'] = df.groupby('player_id')['launch_speed'].rolling(20).mean().fillna(df.groupby('player_id')['launch_speed'].mean())
@@ -84,7 +89,7 @@ def create_new_batter_df_with_features_and_tests():
         "player_name", "player_id", "game_date", "pitch_type", "p_throws",
         "launch_speed_bin", "launch_angle_bin", "speed_diff", "angle_diff",
         "game_month", "days_since_last_hr", "cumulative_hr", "release_speed_bin",
-        "pitch_type_p_throws"
+        "pitch_type_p_throws", "release_spin_rate_bin", "release_spin_rate"
     ]
 
     for column in columns_to_check:
@@ -111,6 +116,8 @@ def load_batter_profile_data(df):
     bigquery.SchemaField('player_name', 'STRING', mode='REQUIRED', description='The name of the player.'),
     bigquery.SchemaField('launch_speed', 'FLOAT', mode='REQUIRED', description='The speed of the ball when it leaves the bat.'),
     bigquery.SchemaField('launch_angle', 'FLOAT', mode='REQUIRED', description='The angle of the ball when it leaves the bat.'),
+    bigquery.SchemaField('release_spin_rate', 'FLOAT', mode='REQUIRED', description='The spin rate of the pitch.'),
+    bigquery.SchemaField('release_spin_rate_bin', 'STRING', mode='REQUIRED', description='The spin rate of the pitch binned into 3 categories: low, normal, high.'),
     bigquery.SchemaField('pitch_type', 'STRING', mode='REQUIRED', description='The type of pitch thrown.'),
     bigquery.SchemaField('release_speed', 'FLOAT', mode='REQUIRED', description='The speed of the pitch when it leaves the pitchers hand.'),
     bigquery.SchemaField('p_throws', 'STRING', mode='REQUIRED', description='The hand the pitcher throws with.'),
@@ -175,6 +182,7 @@ def create_batter_summary_dataframe(df):
         'cumulative_hr': 'max',
         'launch_speed': ['mean', 'std'],
         'launch_angle': ['mean', 'std'],
+        'release_spin_rate': ['mean', 'std'],
         'speed_diff': 'mean',
         'angle_diff': 'mean',
         'days_since_last_hr': ['mean', 'std'],
