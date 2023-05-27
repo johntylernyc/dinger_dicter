@@ -10,9 +10,6 @@ def get_qualified_batters(years, qual):
         player_ids = player_ids['key_mlbam'].values.tolist()
         player_ids_list.extend(player_ids)
         player_ids_list = list(dict.fromkeys(player_ids_list))
-        # limit to 3 players for testing
-        #TODO: Remove test case when finished testing
-        player_ids_list = player_ids_list[:3]
     return player_ids_list
     
 # if __name__ == "__main__":

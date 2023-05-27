@@ -11,7 +11,6 @@ from helper_functions.get_probable_starters import get_probable_starters
 from helper_functions.gbq_load_probable_starters import load_probable_starters
 from helper_functions.gbq_load_pitcher_statcast_data import load_data_to_gbq as load_pitcher_data_to_gbq
 from helper_functions.get_pitcher_data import get_daily_pitcher_statcast_data
-
 from helper_functions.config_bigquery import project_id, dataset_name, statcast_batter_table_name, json_key_path, statcast_pitcher_table_name, probable_pitcher_table_name
 from helper_functions.config_application_dates import most_recent_batter_date, yesterday, today_datetime, two_days_ago, batter_date_to_fetch, pitcher_date_to_fetch, today, most_recent_pitcher_date
 from helper_functions.config_application_parameters import years, hitter_qual, pitcher_qual

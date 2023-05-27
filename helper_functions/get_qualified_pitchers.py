@@ -16,11 +16,6 @@ def get_qualified_pitchers(years, qual):
         player_ids = player_ids['key_mlbam'].values.tolist()
         player_ids_list.extend(player_ids)
         player_ids_list = list(dict.fromkeys(player_ids_list))
-
-        # limit player_ids_list to 3 for testing purposes
-        #TODO: Remove test case when finished testing
-        player_ids_list = player_ids_list[:3]
-
     return player_ids_list
 
 
