@@ -4,6 +4,7 @@ import pandas as pd
 import datetime
 from .config_bigquery import dataset_name, statcast_batter_table_name, json_key_path, project_id
 
+
 def get_all_batter_data():
     # create a client object using the `python-sandbox-31204-1b0c0c5b5f8e.json` service account key in service_account_keys folder. 
     client = bigquery.Client(project=project_id).from_service_account_json(json_key_path)

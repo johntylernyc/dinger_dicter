@@ -1,8 +1,11 @@
 import os
 import subprocess
 import json
+import re
+from datetime import datetime
 from pybaseball import playerid_lookup
 import pandas as pd
+from dateutil import parser
 from google.cloud import bigquery
 
 
@@ -12,63 +15,21 @@ def create_probable_pitchers_table(project_id, dataset_name, table_name, json_ke
     table_ref = dataset_ref.table(table_name)
 
     schema = [
-        bigquery.SchemaField("teamAway", "STRING", mode="REQUIRED"),
-        bigquery.SchemaField("teamHome", "STRING", mode="REQUIRED"),
-        bigquery.SchemaField("time", "DATETIME", mode="REQUIRED"),
-        bigquery.SchemaField("pitcherAway", "STRING", mode="REQUIRED"),
-        bigquery.SchemaField("pitcherHome", "STRING", mode="REQUIRED"),
+        bigquery.SchemaField("away_team", "STRING", mode="REQUIRED"),
+        bigquery.SchemaField("home_team", "STRING", mode="REQUIRED"),
+        bigquery.SchemaField("game_date", "DATE", mode="REQUIRED"),
+        bigquery.SchemaField("game_time", "DATETIME", mode="REQUIRED"),
+        bigquery.SchemaField("away_pitcher", "STRING", mode="REQUIRED"),
+        bigquery.SchemaField("home_pitcher", "STRING", mode="REQUIRED"),
         bigquery.SchemaField("away_player_key_mlbam", "INT64", mode="REQUIRED"),
-        bigquery.SchemaField("home_player_key_mlbam", "INT64", mode="REQUIRED")
+        bigquery.SchemaField("home_player_key_mlbam", "INT64", mode="REQUIRED"),
+        bigquery.SchemaField("load_date_time", "DATETIME", mode="REQUIRED")
     ]
 
     table = bigquery.Table(table_ref, schema=schema)
     table = client.create_table(table)
 
     print(f"Created table {project_id}.{dataset_name}.{table_name}.")
-
-#TODO: This is mostly working, but isn't adding doubleheaders to the database. 
-def starters_exist_for_date(date, probable_pitchers, table_name, dataset_name, json_key_path, project_id):
-    from google.cloud import bigquery
-    from google.oauth2 import service_account
-    from google.api_core.exceptions import NotFound
-
-
-    credentials = service_account.Credentials.from_service_account_file(json_key_path)
-    client = bigquery.Client(credentials=credentials, project=project_id)
-
-    # Check if the table exists and create it if it doesn't
-    try:
-        client.get_table(f"{dataset_name}.{table_name}")
-    except NotFound:
-        create_probable_pitchers_table(project_id, dataset_name, table_name, json_key_path)
-
-    query = f"""
-        SELECT COUNT(*)
-        FROM `{project_id}.{dataset_name}.{table_name}`
-        WHERE DATE(`time`) = '{date}'
-        AND away_player_key_mlbam = @away_mlbam
-        AND home_player_key_mlbam = @home_mlbam
-    """
-
-    # Iterate over the games in the probable_pitchers DataFrame
-    duplicate_count = 0
-    for index, row in probable_pitchers.iterrows():
-        away_mlbam = row['away_player_key_mlbam']
-        home_mlbam = row['home_player_key_mlbam']
-        
-        job_config = bigquery.QueryJobConfig(
-            query_parameters=[
-                bigquery.ScalarQueryParameter("away_mlbam", "INT64", away_mlbam),
-                bigquery.ScalarQueryParameter("home_mlbam", "INT64", home_mlbam),
-            ]
-        )
-
-        query_job = client.query(query, job_config=job_config)
-        result = query_job.result()
-        count = list(result)[0][0]
-        duplicate_count += count
-
-    return duplicate_count
 
 def run_npm_start(date):
     try:
@@ -89,8 +50,23 @@ def get_probable_starters(date):
         json_data = json.load(f)
         probable_pitchers_data = json_data['matchups']
 
-    os.remove(probable_pitchers_file)
     probable_pitchers = pd.DataFrame(probable_pitchers_data)
+
+    def clean_time(time_str):
+        if 'Bot' in time_str or 'Top' in time_str or 'final' in time_str:
+            return datetime.now().replace(hour=4, minute=0, second=0, microsecond=0).strftime('%Y-%m-%d %H:%M')
+        else:
+            # Remove timezone
+            time_str = re.sub(r'\s\w+$', '', time_str)
+            # Replace unusual characters and strip unnecessary parts
+            time_str = re.sub(r'[^a-zA-Z0-9:\s]', '', re.sub(r'^\w+, ', '', time_str))
+            # Parse the date
+            dt = parser.parse(time_str)
+            # Return it in the desired format
+            return dt.strftime('%Y-%m-%d %H:%M')
+
+    probable_pitchers['time'] = probable_pitchers['time'].apply(clean_time)
+
     away_player_mlbam = []
     home_player_mlbam = []
 
@@ -103,7 +79,6 @@ def get_probable_starters(date):
         first_name, last_name = player_name.split(' ')
         player_mlbam = playerid_lookup(last_name, first_name, fuzzy=True)
         return int(player_mlbam['key_mlbam'].values[0]) if not player_mlbam.empty else None
-
 
     for index, row in probable_pitchers.iterrows():
         away_player_mlbam.append(get_player_mlbam(row['pitcherAway']))

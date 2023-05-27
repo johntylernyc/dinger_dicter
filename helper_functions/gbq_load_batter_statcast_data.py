@@ -31,32 +31,49 @@ def load_data_to_gbq(daily_statcast_data, dataset_name, table_name, json_key_pat
     # Use the DataFrame directly, without reading from a CSV
     df = daily_statcast_data
     # Force the 'launch_speed' column to be float
+    df['player_id'] = df['player_id'].astype(int)
     df['launch_speed'] = df['launch_speed'].astype(float)
     df['launch_angle'] = df['launch_angle'].astype(float)
     df['release_speed'] = df['release_speed'].astype(float)
     df['release_spin_rate'] = df['release_spin_rate'].astype(float)
-
+    df['game_date'] = pd.to_datetime(df['game_date']).dt.date
     # Add a new column 'load_timestamp' with the current date and time
     df['load_timestamp'] = datetime.utcnow()
-
-    inferred_schema = schema_from_dataframe(df)
+    df['load_timestamp'] = pd.to_datetime(df['load_timestamp'])
 
     try:
         table = client.get_table(table_ref)
         print('Table already exists.')
 
-        if table.schema != inferred_schema:
-            print('Schema has changed, updating schema.')
-            table.schema = inferred_schema
-            client.update_table(table, ['schema'])
-
     except:
         print('Table does not exist. Creating table with schema.')
-        table = bigquery.Table(table_ref, schema=inferred_schema)
+        table = bigquery.Table(table_ref, schema=[
+            bigquery.SchemaField('player_id', 'INT64'),
+            bigquery.SchemaField('game_date', 'DATE'),
+            bigquery.SchemaField('player_name', 'STRING'),
+            bigquery.SchemaField('launch_speed', 'FLOAT64'),
+            bigquery.SchemaField('launch_angle', 'FLOAT64'),
+            bigquery.SchemaField('pitch_type', 'STRING'),
+            bigquery.SchemaField('release_speed', 'FLOAT64'),
+            bigquery.SchemaField('p_throws', 'STRING'),
+            bigquery.SchemaField('release_spin_rate', 'FLOAT64'),
+            bigquery.SchemaField('load_timestamp', 'DATETIME'),
+        ])
         table = client.create_table(table)
 
     job_config = bigquery.LoadJobConfig(
-        schema=inferred_schema,
+        schema=[
+            bigquery.SchemaField('player_id', 'INT64'),
+            bigquery.SchemaField('game_date', 'DATE'),
+            bigquery.SchemaField('player_name', 'STRING'),
+            bigquery.SchemaField('launch_speed', 'FLOAT64'),
+            bigquery.SchemaField('launch_angle', 'FLOAT64'),
+            bigquery.SchemaField('pitch_type', 'STRING'),
+            bigquery.SchemaField('release_speed', 'FLOAT64'),
+            bigquery.SchemaField('p_throws', 'STRING'),
+            bigquery.SchemaField('release_spin_rate', 'FLOAT64'),
+            bigquery.SchemaField('load_timestamp', 'DATETIME'),
+        ],
         write_disposition='WRITE_APPEND',
     )
 

@@ -1,6 +1,7 @@
 from google.cloud import bigquery
 import datetime
 
+
 def get_most_recent_date(project_id, dataset_name, table_name, json_key_path):
     client = bigquery.Client.from_service_account_json(json_key_path)
     dataset_ref = client.dataset(dataset_name)
@@ -31,7 +32,7 @@ def get_most_recent_date(project_id, dataset_name, table_name, json_key_path):
         if isinstance(most_recent_date, datetime.datetime):
             return most_recent_date.strftime('%Y-%m-%d')
         else:
-            return most_recent_date
+            return most_recent_date.strftime('%Y-%m-%d')
     else:
         # Handle the case when most_recent_date is None
         # For example, return a default date or raise a custom exception
