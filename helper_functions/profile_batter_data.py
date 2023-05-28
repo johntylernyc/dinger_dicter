@@ -12,7 +12,7 @@ def get_all_batter_data():
     dataset_ref = client.dataset(dataset_name)
     # define the name of the table
     table_ref = dataset_ref.table(statcast_batter_table_name)
-    #load the table
+    # load the table
     table = client.get_table(table_ref)
     # get the data from the table
     data = client.list_rows(table, max_results=1000000)
@@ -22,6 +22,7 @@ def get_all_batter_data():
     df = df.sort_values(by=['player_id', 'game_date'], ascending=True)
     # return the pandas dataframe
     return df
+
 
 def preprocess_batter_data(df):
     # remove all rows where game_date is null
@@ -44,6 +45,7 @@ def preprocess_batter_data(df):
     df = df[df['release_spin_rate'].notna()]
     # return the dataframe
     return df
+
 
 def add_batter_features(df):
     print(f"Number of rows after preprocessing: {len(df)}")
@@ -77,6 +79,7 @@ def add_batter_features(df):
 
     return df
 
+
 def create_new_batter_df_with_features_and_tests():
     def data_quality_check(df, column_name):
         if df[column_name].isnull().sum() == 0:
@@ -100,6 +103,7 @@ def create_new_batter_df_with_features_and_tests():
     print("moving_avg_angle data quality check skipped")
     print('All tests passed!')
     return df
+
 
 def load_batter_profile_data(df):
     # create a BigQuery client
@@ -176,6 +180,7 @@ def load_batter_profile_data(df):
         print('Loaded {} rows into {}:{}.'.format(job_result.output_rows, dataset_name, statcast_batter_table_name + '_with_features'))
         return job_result.job_id
 
+
 def create_batter_summary_dataframe(df):
     # Group by player_id and get summary statistics
     player_summary = df.groupby('player_id').agg({
@@ -213,6 +218,7 @@ def create_batter_summary_dataframe(df):
 
     return summary_df.reset_index()
 
+
 def load_batter_summary_data(df):
     # create a BigQuery client
     client = bigquery.Client(project=project_id).from_service_account_json(json_key_path)
@@ -222,7 +228,8 @@ def load_batter_summary_data(df):
     table_ref = dataset_ref.table(statcast_batter_table_name + '_summary')
     # initialize the job variable
     job_result = None
-    # create the schema 
+
+    # create the schema
     def generate_bigquery_schema(df):
         schema = []
         

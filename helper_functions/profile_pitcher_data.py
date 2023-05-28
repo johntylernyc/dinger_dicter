@@ -24,6 +24,7 @@ def get_all_pitcher_data():
     # return the pandas dataframe
     return df
 
+
 def preprocess_pitcher_data(df):
     # remove all rows where game_date is null
     df = df[df['game_date'].notna()]
@@ -42,6 +43,7 @@ def preprocess_pitcher_data(df):
     # if the spin_rate is null, drop the row
     return df
 
+
 def add_pitcher_features(df):
     print(f"Number of rows after preprocessing: {len(df)}")
     df['release_spin_rate_bin'] = pd.qcut(df['release_spin_rate'], q=3, labels=['low', 'medium', 'high'])
@@ -51,6 +53,7 @@ def add_pitcher_features(df):
     df['game_date'] = pd.to_datetime(df['game_date'])
     df['game_date'] = df['game_date'].dt.date
     return df 
+
 
 def create_new_pitcher_df_with_features_and_tests():
     def data_quality_check(df, column_name):
@@ -72,6 +75,7 @@ def create_new_pitcher_df_with_features_and_tests():
 
     print('All tests passed!')
     return df
+
 
 def load_pitcher_profile_data(df):
     # create a BigQuery client
@@ -97,7 +101,7 @@ def load_pitcher_profile_data(df):
         bigquery.SchemaField("date_added", "DATETIME", mode="NULLABLE", description="Date the data was added to the table")
     ]
 
-        # Try to get the table, if NotFound exception is raised, create the table
+    # Try to get the table, if NotFound exception is raised, create the table
     try:
         table = client.get_table(table_ref)
     except NotFound:
@@ -138,6 +142,7 @@ def load_pitcher_profile_data(df):
         print('Loaded {} rows into {}:{}.'.format(job_result.output_rows, dataset_name, statcast_pitcher_table_name + '_with_features'))
         return job_result.job_id
 
+
 def create_pitcher_summary_dataframe(df):
     # Group by player_id and get summary statistics
     player_summary = df.groupby('player_id').agg({
@@ -169,6 +174,7 @@ def create_pitcher_summary_dataframe(df):
 
     return summary_df.reset_index()
 
+
 def load_pitcher_summary_data(df):
     # create a BigQuery client
     client = bigquery.Client(project=project_id).from_service_account_json(json_key_path)
@@ -178,6 +184,7 @@ def load_pitcher_summary_data(df):
     table_ref = dataset_ref.table(statcast_pitcher_table_name + '_summary')
     # initialize the job variable
     job_result = None
+
     def generate_bigquery_schema(df):
         schema = []
 

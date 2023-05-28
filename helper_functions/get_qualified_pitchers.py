@@ -7,7 +7,6 @@ def get_qualified_pitchers(years, qual):
     for year in years: 
         try:
             qualified_pitchers = pitching_stats(year, qual=qual)
-            print(f'qualified_pitchers data for {year}:\n{qualified_pitchers.head()}')
         except ValueError as ve:
             print(f'Error occurred when fetching pitching stats for {year}: {ve}')
             continue

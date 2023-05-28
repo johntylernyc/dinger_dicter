@@ -14,6 +14,7 @@ def pandas_dtype_to_bigquery_dtype(dtype):
     }
     return dtype_mapping.get(dtype, 'STRING')
 
+
 def schema_from_dataframe(df):
     schema = []
     for column_name, data_type in zip(df.columns, df.dtypes):
@@ -25,6 +26,7 @@ def schema_from_dataframe(df):
         else:
             schema.append(bigquery.SchemaField(column_name, pandas_dtype_to_bigquery_dtype(data_type.name)))
     return schema
+
 
 def load_data_to_gbq(daily_statcast_data, dataset_name, table_name, json_key_path, project_id):
     client = bigquery.Client(project=project_id).from_service_account_json(json_key_path)

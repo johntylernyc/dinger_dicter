@@ -6,8 +6,11 @@ from .config_application_dates import pitcher_date_to_fetch, yesterday
 def get_daily_pitcher_statcast_data(player_ids, start_date=pitcher_date_to_fetch, end_date=yesterday):
     daily_statcast_data = []
     for player in player_ids:
-        daily_statcast_data.append(statcast_pitcher(start_date, end_date, player))
-        daily_statcast_data[-1]['player_id'] = player
+        try: 
+            daily_statcast_data.append(statcast_pitcher(start_date, end_date, player))
+            daily_statcast_data[-1]['player_id'] = player
+        except pd.errors.ParserError:
+            print(f'Not able to fetch statcast data for {player}. Skipping this player.')
     daily_statcast_data = pd.concat(daily_statcast_data)
     daily_statcast_data = daily_statcast_data[daily_statcast_data['game_type'] == 'R']
     daily_statcast_data = daily_statcast_data[['player_id', 'game_date', 'player_name', 'release_speed', 'release_spin_rate', 'p_throws', 'pitch_type']]

@@ -31,6 +31,7 @@ def create_probable_pitchers_table(project_id, dataset_name, table_name, json_ke
 
     print(f"Created table {project_id}.{dataset_name}.{table_name}.")
 
+
 def run_npm_start(date):
     try:
         project_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'baseball-probable-pitchers')
@@ -39,6 +40,7 @@ def run_npm_start(date):
         print(f"Success: {stdout.decode('utf-8')}") if process.returncode == 0 else print(f"Error: {stderr.decode('utf-8')}")
     except Exception as e:
         print(f"An error occurred: {e}")
+
 
 def get_probable_starters(date):
     run_npm_start(date)
