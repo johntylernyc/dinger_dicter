@@ -134,3 +134,9 @@ service_account_keys/
 daily_statcast_data.csv
 .vscode/settings.json
 helper_functions/baseball-probable-pitchers/probable-pitchers-with-player-ids.json
+.idea/dataSources.xml
+.idea/dinger_dicter.iml
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
