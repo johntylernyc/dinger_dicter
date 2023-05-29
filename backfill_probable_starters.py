@@ -4,9 +4,9 @@ from helper_functions.config_bigquery import json_key_path, probable_pitcher_tab
 from datetime import timedelta, date
 
 
-start_date = date(2021, 7, 19)
-end_date = date(2021, 10, 3)
-
+start_date = date(2022, 4, 9)
+end_date = date(2022, 4, 10)
+# actual end_date was 2022, 10, 2 but I'm using 2022, 4, 8 for testing purposes after git merge and submodule cleanup
 
 def daterange(start_date, end_date):
     for n in range(int((end_date - start_date).days)):

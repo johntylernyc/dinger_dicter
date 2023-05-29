@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timedelta, date
 
 from helper_functions.get_qualified_batters import get_qualified_batters
 from helper_functions.get_qualified_pitchers import get_qualified_pitchers
@@ -51,13 +51,34 @@ elif today_datetime.hour >= 9:
 else:
     print('Something went terribly wrong updating statcast data. Please check the code.')
 
+#TODO: Replace these variables with real dates from the probable_pitchers_daily table
+start_date_probable_pitchers = date(2022, 4, 11)
+end_date_probable_pitchers = date(2022, 10, 2)
+
 print("Kicking off a Node.js application to find today's probable starters.")
-probable_starters = get_probable_starters(today)
-print("Node.js application has finished. Checking to see if today's probable starters already exist in the database.")
-load_probable_starters(probable_starters, probable_pitcher_table_name, json_key_path)
-print("Today's probable starters have been loaded to BigQuery.")
+def daterange(start_date_probable_pitchers, end_date_probable_pitchers):
+    for n in range(int((end_date_probable_pitchers - start_date_probable_pitchers).days)):
+        yield start_date_probable_pitchers + timedelta(n)
 
 
+for single_date in daterange(start_date_probable_pitchers, end_date_probable_pitchers):
+    date_to_fetch = single_date.strftime("%Y-%m-%d")
+    print(f"Fetching probable starters for date: {date_to_fetch}")
+    # run_npm_start(date_to_fetch)
+    probable_starters = get_probable_starters(date_to_fetch)
+    if probable_starters.empty:
+        print("No data available. Skipping load job.")
+        continue
+    else:
+        print(f"Probable starters for date: {date_to_fetch} have been fetched.")
+        # assuming you have a function to save/load these to a database
+        load_probable_starters(probable_starters, probable_pitcher_table_name, json_key_path)
+        print(f"Probable starters for date: {date_to_fetch} have been loaded to BigQuery.")
+
+# probable_starters = get_probable_starters(today)
+# print("Node.js application has finished. Checking to see if today's probable starters already exist in the database.")
+# load_probable_starters(probable_starters, probable_pitcher_table_name, json_key_path)
+# print("Today's probable starters have been loaded to BigQuery.")
 def fetch_and_load_pitcher_statcast_data(date_to_check, date_to_load):
     if datetime.strptime(most_recent_pitcher_date, '%Y-%m-%d').date() == datetime.strptime(date_to_check, '%Y-%m-%d').date():
         print(f'The most recent date in the pitcher database is: {most_recent_pitcher_date}')
