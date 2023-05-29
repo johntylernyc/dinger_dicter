@@ -52,7 +52,7 @@ else:
     print('Something went terribly wrong updating statcast data. Please check the code.')
 
 #TODO: Replace these variables with real dates from the probable_pitchers_daily table
-start_date_probable_pitchers = date(2022, 4, 11)
+start_date_probable_pitchers = date(2022, 5, 12)
 end_date_probable_pitchers = date(2022, 10, 2)
 
 print("Kicking off a Node.js application to find today's probable starters.")

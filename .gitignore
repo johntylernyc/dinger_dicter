@@ -76,6 +76,8 @@ target/
 
 # JavaScript dependencies
 helper_functions/baseball-probable-pitchers/node_modules/
+probable-pitchers.json
+probable-pitchers-with-player-ids.json
 
 # Jupyter Notebook
 .ipynb_checkpoints
