@@ -52,8 +52,8 @@ else:
     print('Something went terribly wrong updating statcast data. Please check the code.')
 
 #TODO: Replace these variables with real dates from the probable_pitchers_daily table
-start_date_probable_pitchers = date(2022, 5, 12)
-end_date_probable_pitchers = date(2022, 10, 2)
+start_date_probable_pitchers = date(2023, 3, 30)  # the day you want to retrieve records
+end_date_probable_pitchers = date(2023, 5, 30)  # the day after the last day you want to retrieve
 
 print("Kicking off a Node.js application to find today's probable starters.")
 def daterange(start_date_probable_pitchers, end_date_probable_pitchers):
@@ -66,7 +66,7 @@ for single_date in daterange(start_date_probable_pitchers, end_date_probable_pit
     print(f"Fetching probable starters for date: {date_to_fetch}")
     # run_npm_start(date_to_fetch)
     probable_starters = get_probable_starters(date_to_fetch)
-    if probable_starters.empty:
+    if probable_starters is None:
         print("No data available. Skipping load job.")
         continue
     else:
