@@ -10,28 +10,36 @@ def load_probable_starters(df, table_name, json_key_path):
     dataset_ref = client.dataset(dataset_name)
     table_ref = dataset_ref.table(table_name)
 
-    # Rename the column teamAway to away_team
-    df.rename(columns={'teamAway': 'away_team'}, inplace=True)
-    # Rename the column teamHome to home_team
-    df.rename(columns={'teamHome': 'home_team'}, inplace=True)
-    # Rename the time column to game_time
-    df.rename(columns={'time': 'game_time'}, inplace=True)
-    # Rename the column pitcherAway to away_pitcher
-    df.rename(columns={'pitcherAway': 'away_pitcher'}, inplace=True)
-    # Rename the column pitcherHome to home_pitcher
-    df.rename(columns={'pitcherHome': 'home_pitcher'}, inplace=True)
-    # set the load date time column to the current date and time
+    # Rename the columns
+    df.rename(columns={'teamAway': 'away_team',
+                       'teamHome': 'home_team',
+                       'time': 'game_time',
+                       'pitcherAway': 'away_pitcher',
+                       'pitcherHome': 'home_pitcher'}, inplace=True)
+
+    # Set the load date time column to the current date and time
     df['load_date_time'] = datetime.datetime.now()
-    # set load_date_time to YYYY-MM-DD HH:MM format
     df['load_date_time'] = df['load_date_time'].dt.strftime('%Y-%m-%d %H:%M')
-    # attempt to resolve str to int error
-    df['away_player_key_mlbam'] = df['away_player_key_mlbam'].astype(int)
-    df['home_player_key_mlbam'] = df['home_player_key_mlbam'].astype(int)
+    df['load_date_time'] = pd.to_datetime(df['load_date_time'])
+
+    # Convert columns to nullable integer type
+    df['away_player_key_mlbam'] = df['away_player_key_mlbam'].astype(object)
+    df['home_player_key_mlbam'] = df['home_player_key_mlbam'].astype(object)
+
+    # Set the game_date column to the date of the game
     df['game_time'] = pd.to_datetime(df['game_time'])
     df['game_time'] = df['game_time'].apply(lambda x: x.to_pydatetime())
-    df['load_date_time'] = pd.to_datetime(df['load_date_time'])
-    # user game_time column to set the game_date column to the date of the game
     df['game_date'] = df['game_time'].dt.date
+
+    # Define the full table ID
+    full_table_id = f"{dataset_name}.{table_name}"
+
+    # # attempt to resolve str to int error
+    # df['away_player_key_mlbam'] = df['away_player_key_mlbam'].astype(int)
+    # df['home_player_key_mlbam'] = df['home_player_key_mlbam'].astype(int)
+    # df['load_date_time'] = pd.to_datetime(df['load_date_time'])
+    # # user game_time column to set the game_date column to the date of the game
+    # df['game_date'] = df['game_time'].dt.date
 
     # Define the full table ID
     full_table_id = f"{project_id}.{dataset_name}.{table_name}"
